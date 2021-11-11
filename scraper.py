@@ -1,11 +1,13 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import urllib
-import urllib2
+from urllib.request import urlopen
 import scraperwiki
 import hashlib
 from bs4 import BeautifulSoup
 from datetime import datetime, tzinfo
 import string
-from urlparse import parse_qs
+from urllib.parse import urlparse
 import unicodedata
 import sys
 
@@ -20,7 +22,7 @@ def init():
     #parseByPage("http://www.cemla.com/busqueda/buscador_action.php?Apellido=BA&Nombre=&d-dia=01&d-mes=01&d-anio=1882&h-dia=31&h-mes=12&h-anio=1882&Apellido=Basag")
 
 def fetch_url(url): 
-    return BeautifulSoup(urllib2.urlopen(url).read().replace("º"," ")) 
+    return BeautifulSoup(urlopen(url).read().replace("º"," ")) 
 
 #Parse and save available years
 def parseAvailableYears():
@@ -32,7 +34,7 @@ def parseAvailableYears():
             y = int(anio.get_text())
             scraperwiki.sqlite.save(unique_keys=['anio'], data={'anio':y}, table_name="anio")
         except ValueError:
-            print "Not an integer %s" % anio.get_text()
+            print(f"Not an integer {anio.get_text()}")
 
 #parse by year 1882 1883 ...
 def parseByYear(url):
@@ -40,7 +42,7 @@ def parseByYear(url):
     anios =  scraperwiki.sqlite.execute("select anio from anio")
     for anio in anios['data']:
         data['year'] = anio[0]
-        parseByLetter(url + '&h-anio='+ str( anio[0] ) + '&d-anio='+ str( anio[0] ) , data ) 
+        parseByLetter(f'{url}&h-anio={anio[0]}&d-anio={anio[0]}', data ) 
 
 letters = map(chr, range(65, 91))
 letters = map(chr, range(65, 68))
@@ -52,7 +54,7 @@ def parseByLetter(url, data):
         for s in letters:
             data['first'] = f
             data['second'] = s
-            parseByPages(url + '&Apellido='+ f + s , data )
+            parseByPages(f'{url}&Apellido={f}{s}', data )
 
 
 #Parse by pages 0 1 2 ...
@@ -62,7 +64,7 @@ def parseByPages(url, data):
 
     data['page'] = page
 
-    while (parseByPage(url + '&pageNum_Recordset1='+ str( page ), data)):
+    while (parseByPage(f'{url}&pageNum_Recordset1={page}', data)):
         page += 1
         data['page'] = page
 
@@ -82,7 +84,7 @@ def parseByPage(url,data):
         if soup.find("td","mensaje"):
             return False
     
-        cl = parse_qs(url)
+        cl = urlparse.parse_qs(url)
         cl = cl['Apellido'][0]
     
         for r in regs:
@@ -122,7 +124,7 @@ def parseByPage(url,data):
                         data['id'] =  h.hexdigest()
                         scraperwiki.sqlite.save(unique_keys=['id'], data=data, table_name="inmigrante")
     
-                except Exception,e:
+                except Exception as e:
                      scraperwiki.sqlite.save(unique_keys=['date'],data={"date":str(datetime.now()),"desc":str(e),"url":url}, table_name="log")
     
     return True
@@ -154,8 +156,8 @@ def saveCurrentDataAndVerify(data):
         if len(result['data']) > 0 :
             process = False
 
-    except Exception,e:
-        print "Do nothing, first time, no table"
+    except Exception as e:
+        print("Do nothing, first time, no table")
 
     data["id"] = id_process
     data["date"] = str(datetime.now()) 

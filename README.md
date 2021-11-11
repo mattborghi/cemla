@@ -11,11 +11,11 @@ $ source env/bin/activate
 Install requirements
 
 ```shell
-$ pip install -r requirements.txt
+$ pip3 install -r requirements.txt
 ```
 
 Run the scrapper
 
 ```shell
-$ python scrapper.py
+$ python3 scraper.py
 ```
