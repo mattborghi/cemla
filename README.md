@@ -13,3 +13,9 @@ Install requirements
 ```shell
 $ pip install -r requirements.txt
 ```
+
+Run the scrapper
+
+```shell
+$ python scrapper.py
+```
